@@ -1,13 +1,23 @@
 import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
 import { Slider } from './ui/slider';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import type { TimeFilter } from '@/types/earthquake';
+import type { TimeFilter, CountryFilter } from '@/types/earthquake';
+import { countryFilters } from '@/lib/countryFilters';
 
 interface FiltersProps {
   selectedTime: TimeFilter;
   onTimeChange: (filter: TimeFilter) => void;
   minMagnitude: number;
   onMagnitudeChange: (magnitude: number) => void;
+  selectedCountry: CountryFilter;
+  onCountryChange: (country: CountryFilter) => void;
 }
 
 export const timeFilters: TimeFilter[] = [
@@ -22,14 +32,38 @@ export function Filters({
   onTimeChange,
   minMagnitude,
   onMagnitudeChange,
+  selectedCountry,
+  onCountryChange,
 }: FiltersProps) {
   return (
     <Card className="w-full">
       <CardHeader>
         <CardTitle>Filters</CardTitle>
-        <CardDescription>Filter earthquakes by time and magnitude</CardDescription>
+        <CardDescription>Filter earthquakes by time, magnitude, and location</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        <div className="space-y-3">
+          <label className="text-sm font-medium">Country / Region</label>
+          <Select
+            value={selectedCountry.value}
+            onValueChange={(value) => {
+              const country = countryFilters.find((c) => c.value === value);
+              if (country) onCountryChange(country);
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select a country" />
+            </SelectTrigger>
+            <SelectContent>
+              {countryFilters.map((country) => (
+                <SelectItem key={country.value} value={country.value}>
+                  {country.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         <div className="space-y-3">
           <label className="text-sm font-medium">Time Window</label>
           <Tabs

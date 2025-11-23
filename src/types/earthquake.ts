@@ -63,3 +63,9 @@ export interface MagnitudeFilter {
   min: number;
   max: number;
 }
+
+export interface CountryFilter {
+  label: string;
+  value: string;
+  keywords: string[];
+}

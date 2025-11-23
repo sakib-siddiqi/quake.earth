@@ -7,13 +7,15 @@ import { Filters, timeFilters } from './components/Filters';
 import { DetailModal } from './components/DetailModal';
 import { NewsPanel } from './components/NewsPanel';
 import { ThemeToggle } from './components/theme-toggle';
-import type { EarthquakeFeature, TimeFilter } from './types/earthquake';
+import type { EarthquakeFeature, TimeFilter, CountryFilter } from './types/earthquake';
+import { countryFilters } from './lib/countryFilters';
 
 function App() {
   const [selectedEarthquake, setSelectedEarthquake] = useState<EarthquakeFeature | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedTimeFilter, setSelectedTimeFilter] = useState<TimeFilter>(timeFilters[1]); // 24h default
   const [minMagnitude, setMinMagnitude] = useState(0);
+  const [selectedCountry, setSelectedCountry] = useState<CountryFilter>(countryFilters[0]); // All countries default
 
   const mapRef = useRef<HTMLDivElement>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
@@ -97,6 +99,8 @@ function App() {
                 onTimeChange={setSelectedTimeFilter}
                 minMagnitude={minMagnitude}
                 onMagnitudeChange={setMinMagnitude}
+                selectedCountry={selectedCountry}
+                onCountryChange={setSelectedCountry}
               />
             </section>
 
@@ -107,6 +111,7 @@ function App() {
                 onMarkerClick={handleMarkerClick}
                 hours={selectedTimeFilter.hours}
                 minMagnitude={minMagnitude}
+                countryFilter={selectedCountry}
               />
             </section>
 
@@ -116,6 +121,7 @@ function App() {
                 hours={selectedTimeFilter.hours}
                 minMagnitude={minMagnitude}
                 onItemClick={handleTimelineItemClick}
+                countryFilter={selectedCountry}
               />
             </section>
 

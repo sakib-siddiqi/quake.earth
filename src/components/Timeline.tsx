@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import useSWR from 'swr';
 import { fetchRecentEarthquakes, getTimeRange } from '@/api/earthquakes';
-import type { EarthquakeFeature } from '@/types/earthquake';
+import type { EarthquakeFeature, CountryFilter } from '@/types/earthquake';
+import { filterEarthquakesByCountry } from '@/lib/countryFilters';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 
@@ -10,6 +11,7 @@ interface TimelineProps {
   hours: number;
   minMagnitude: number;
   onItemClick?: (earthquake: EarthquakeFeature) => void;
+  countryFilter?: CountryFilter;
 }
 
 const getMagnitudeColor = (mag: number): string => {
@@ -38,7 +40,7 @@ const getTimeAgo = (timestamp: number): string => {
   return 'Just now';
 };
 
-export function Timeline({ hours, minMagnitude, onItemClick }: TimelineProps) {
+export function Timeline({ hours, minMagnitude, onItemClick, countryFilter }: TimelineProps) {
   const [displayCount, setDisplayCount] = useState(10);
   const { startTime, endTime } = getTimeRange(hours);
 
@@ -49,6 +51,12 @@ export function Timeline({ hours, minMagnitude, onItemClick }: TimelineProps) {
       refreshInterval: 60000, // Refresh every minute
     }
   );
+
+  // Apply country filter
+  const filteredEarthquakes = useMemo(() => {
+    if (!data || !countryFilter) return data?.features || [];
+    return filterEarthquakesByCountry(data.features, countryFilter);
+  }, [data, countryFilter]);
 
   if (isLoading) {
     return (
@@ -78,8 +86,8 @@ export function Timeline({ hours, minMagnitude, onItemClick }: TimelineProps) {
     );
   }
 
-  const displayedEarthquakes = data.features.slice(0, displayCount);
-  const hasMore = data.features.length > displayCount;
+  const displayedEarthquakes = filteredEarthquakes.slice(0, displayCount);
+  const hasMore = filteredEarthquakes.length > displayCount;
 
   return (
     <motion.div
@@ -91,7 +99,10 @@ export function Timeline({ hours, minMagnitude, onItemClick }: TimelineProps) {
         <CardHeader>
           <CardTitle>Recent Earthquakes</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Showing {displayedEarthquakes.length} of {data.features.length} earthquakes
+            Showing {displayedEarthquakes.length} of {filteredEarthquakes.length} earthquakes
+            {countryFilter && countryFilter.value !== 'all' && (
+              <> in {countryFilter.label}</>
+            )}
           </p>
         </CardHeader>
         <CardContent>

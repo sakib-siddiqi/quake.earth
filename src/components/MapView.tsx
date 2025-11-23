@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import { motion } from 'framer-motion';
 import useSWR from 'swr';
 import { fetchRecentEarthquakes, getTimeRange } from '@/api/earthquakes';
-import type { EarthquakeFeature } from '@/types/earthquake';
+import type { EarthquakeFeature, CountryFilter } from '@/types/earthquake';
+import { filterEarthquakesByCountry } from '@/lib/countryFilters';
 import { EarthquakeMarker } from './EarthquakeMarker';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import 'leaflet/dist/leaflet.css';
@@ -13,6 +14,7 @@ interface MapViewProps {
   onMarkerClick?: (earthquake: EarthquakeFeature) => void;
   hours?: number;
   minMagnitude?: number;
+  countryFilter?: CountryFilter;
 }
 
 function MapController({ selectedEarthquake }: { selectedEarthquake?: EarthquakeFeature }) {
@@ -35,6 +37,7 @@ export function MapView({
   onMarkerClick,
   hours = 24,
   minMagnitude = 0,
+  countryFilter,
 }: MapViewProps) {
   const [isClient, setIsClient] = useState(false);
   const { startTime, endTime } = getTimeRange(hours);
@@ -46,6 +49,12 @@ export function MapView({
       refreshInterval: 60000, // Refresh every minute
     }
   );
+
+  // Apply country filter
+  const filteredEarthquakes = useMemo(() => {
+    if (!data || !countryFilter) return data?.features || [];
+    return filterEarthquakesByCountry(data.features, countryFilter);
+  }, [data, countryFilter]);
 
   useEffect(() => {
     setIsClient(true);
@@ -106,8 +115,11 @@ export function MapView({
         <CardHeader>
           <CardTitle>Earthquake Map</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Showing {data.features.length} earthquakes from the last {hours} hour
+            Showing {filteredEarthquakes.length} earthquakes from the last {hours} hour
             {hours > 1 ? 's' : ''}
+            {countryFilter && countryFilter.value !== 'all' && (
+              <> in {countryFilter.label}</>
+            )}
           </p>
         </CardHeader>
         <CardContent>
@@ -122,7 +134,7 @@ export function MapView({
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
-              {data.features.map((earthquake) => (
+              {filteredEarthquakes.map((earthquake) => (
                 <EarthquakeMarker
                   key={earthquake.id}
                   earthquake={earthquake}

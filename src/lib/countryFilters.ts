@@ -48,6 +48,11 @@ export const countryFilters: CountryFilter[] = [
     keywords: ['Iran', 'Iranian']
   },
   {
+    label: 'Bangladesh',
+    value: 'bd',
+    keywords: ['Bangladesh', 'Bangladeshi']
+  },
+  {
     label: 'Peru',
     value: 'pe',
     keywords: ['Peru', 'Peruvian']
